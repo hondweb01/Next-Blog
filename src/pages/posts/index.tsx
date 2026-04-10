@@ -1,4 +1,4 @@
-import { GetStaticProps, NextPage } from "next";
+import { GetServerSideProps , NextPage } from "next";
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
@@ -35,7 +35,7 @@ const Index: NextPage<Props> = ({ articles }) => {
  * 必ずpropsとして返す
  * @returns 
  */
-export const getStaticProps: GetStaticProps = async () => {
+export const getServerSideProps: GetServerSideProps = async () => {
     //記事フォルダの参照
   const files = fs.readdirSync(path.join('src', 'articles'));
   const articles=files.map((filename)=>{
@@ -56,6 +56,7 @@ export const getStaticProps: GetStaticProps = async () => {
     props: {
       articles,
     },
+
   };
 };
 export default Index;

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "easymde": "^2.20.0",
+    "formidable": "^3.5.4",
     "fs": "^0.0.1-security",
     "github-markdown-css": "^5.9.0",
     "gray-matter": "^4.0.3",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/formidable": "^3.5.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

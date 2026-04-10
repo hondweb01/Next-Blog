@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import remarkGfm from "remark-gfm";//GiiHub風にできる
 import remarkBreaks from 'remark-breaks';
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -20,7 +20,7 @@ type Props = {
     convertImage: string;
   };
   content: string;
-  slug: string;
+  slug: string; 
 };
 /**
  * 取ってきた記事を表示する
@@ -29,12 +29,12 @@ type Props = {
  * @returns コンポーネント
  */
 const Index: NextPage<Props>=({ matterData, content })=>{
+  
   return (
     <div>
-      <h1>タイトル：{matterData.title}</h1>
+      <h1 >タイトル：{matterData.title}</h1>
       <p>投稿日：{matterData.date}</p>
       <p>タグ：{matterData.categories}</p>
-      <Image src={`${matterData.convertImage}`} width={600} height={400} />
       
       {/* 
       remarkGfm→コードブロック用
@@ -46,7 +46,7 @@ const Index: NextPage<Props>=({ matterData, content })=>{
 
        }
 <ReactMarkdown
-  remarkPlugins={[remarkGfm]}
+  remarkPlugins={[remarkGfm,remarkBreaks]}
   components={{
     code({ inline, className, children, ...props }) {
       const match = /language-(\w+)/.exec(className || "");
