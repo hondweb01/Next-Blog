@@ -63,7 +63,7 @@ for (const item of items) {
     }
 
    //res.url は「APIのレスポンスボディ」ではない、Responseオブジェクト (リクエストしたurl)
-   //mdの形式で表示
+   //mdの形式で表示する
     const data = await res.json();
     cm.replaceSelection(`![](${data.url})`);
   }
