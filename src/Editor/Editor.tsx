@@ -6,6 +6,11 @@ const ReactSimpleMdEditor = dynamic(() => import("react-simplemde-editor"), {
 
 import "easymde/dist/easymde.min.css";
 import { useState, useRef } from "react";
+import { useRouter } from 'next/router';
+import { useMemo } from "react";
+import "easymde/dist/easymde.min.css";
+import { Options } from "easymde";
+
 
 //TODO: イベントは発火する[object DataTransferItemList]は持ってこれてる
 /**
@@ -16,6 +21,19 @@ import { useState, useRef } from "react";
 export const MarkdownEditor = () => {
   const [markdownValue, setMarkdownValue] = useState("");
   const simpleMdeRef = useRef<any>(null);
+      const router=useRouter();
+/**
+ * EasyMDEプレビューの追加
+ * 型を明示しないとstring[]になってしまう
+ * （"bold", "italic", "heading", "|", "preview"しか対応していないため範囲が広すぎる）
+ * 別解
+ * as const
+ * →「この値しか入っていません」と保証できる
+ */
+const options: Options = useMemo(() => ({
+  toolbar: ["bold", "italic", "heading", "|", "preview", "side-by-side"],
+  spellChecker: false,
+}), []);
 
   const onChange = (value: string) => {
     setMarkdownValue(value);
@@ -69,6 +87,10 @@ for (const item of items) {
   }
 }
 }
+
+
+
+
 // サイズを小さくする
 const resizeImage=(file:File):Promise<Blob>=>{
     return new Promise((resolve)=>{
@@ -77,6 +99,7 @@ const resizeImage=(file:File):Promise<Blob>=>{
       reader.onload=(e)=>{
         img.src=e.target?.result as string;
       };
+      
 
       img.onload=()=>{
         const canvas=document.createElement("canvas");
@@ -108,43 +131,113 @@ const resizeImage=(file:File):Promise<Blob>=>{
     const title = formData.get("title") as string;
     const date = formData.get("date") as string;
 
-    const mainImage=(formData.get("main-image") as File).name;
+    const mainImage=formData.get("main-image") as File;
     const tag=formData.get("tag") as string;
-    console.log(mainImage);
+  
+
+
+    const uploadForm=new FormData();
+    uploadForm.append("file",mainImage);
+
+//サムネイルは先に送信する
+    const res=await fetch("/api/uploadThumbnail",{
+      method:"POST",
+      body:uploadForm
+    });
+    const imageData=await res.json();
+    console.log("↓さむね")
+    console.log(imageData)
+    const url=imageData.url;
+  
+
+
     //const imagePath=mainImage.replace(/\.*$/, '');
 
 //　 /apiでなければ送れない
-    const res = await fetch("/api/createMd", {
+const createPost=async(formData:FormData)=>{
+   const res = await fetch("/api/createMd", {
       method: "POST",
       body: JSON.stringify({
         title,
         date,
         content: markdownValue,
         tag,
-        mainImage
+        mainImage:url
       }),
       headers: {
         "Content-Type": "application/json",
       },
     });
     const data = await res.json();
-    console.log(data);
+    //拡張子の削除
+    const id=data.pageId.split("/").pop()?.replace(".md","");
+    return id;
+
+}
+const id=await createPost(formData);
+console.log("↓idの取得")
+console.log(id)
+//作成処理
+const waitForPostReady = async (id: string) => {
+  const timeout = 30000;
+  const start = Date.now();
+  console.log("idの値"+id)
+
+  while (Date.now() - start < timeout) {
+    try {
+      const res = await fetch(`/posts/${id}`);
+
+      if (res.status === 200) {
+        return true;
+      }
+      await new Promise(r=>setTimeout(r,500));
+    } catch (e) {
+      console.error("fetch error", e);
+    }
+
+    
+  }
+
+  return false;
+};
+ const ready= await waitForPostReady(id);
+ if(ready){
+  alert("作成完了")
+  //自動で遷移する
+  router.push(`/posts/${id}`)
+ }else{
+  alert("投稿処理が終わっていない")
+ }
+
+
+   
+
   };
   return (
     <>
       <form onSubmit={handleSubmit}>
         <div>
             タイトル：
-        <input type="text" placeholder="タイトル" name="title" style={{width: "90%",height:"80px"}}></input>
+        <input type="text" placeholder="タイトル" name="title" style={{width: "90%",height:"80px"}}
+          onKeyDown={(e) => {
+    if (e.key === "Enter") e.preventDefault();
+  }}
+        ></input>
         </div>
         <div>
         投稿日：
-        <input type="date" name="date"></input>
+        <input type="date" name="date"
+          onKeyDown={(e) => {
+    if (e.key === "Enter") e.preventDefault();
+  }}></input>
         </div>
         
         <div>
         サムネイルの画像：
-        <input type="file" name="main-image" />
+        <input type="file" name="main-image"
+          onKeyDown={(e) => {
+    if (e.key === "Enter") e.preventDefault();
+  }} />
         </div>
         <div>
           <span>タグの追加：</span>
@@ -158,12 +251,14 @@ const resizeImage=(file:File):Promise<Blob>=>{
           onChange={onChange}
           className="md"
           events={{paste:handlePaste}}
+          options={options}
           getCodemirrorInstance={(editor)=>{
             simpleMdeRef.current=editor;
           }}
         />
         <button type="submit">送信</button>
       </form>
+
     </>
   );
 };

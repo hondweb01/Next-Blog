@@ -38,8 +38,7 @@ export default function Page(req:NextApiRequest, res:NextApiResponse){
             return;
         }
         const file=files.file;
-        console.log("↓fileの中身")
-        console.log(file);
+
      
 
         const uploadedFile=Array.isArray(file)? file[0]:file;
@@ -59,9 +58,7 @@ res.end();
 
     })
 
-   
-
-
   }
+
 }
 

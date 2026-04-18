@@ -31,7 +31,11 @@ type Props = {
 const Index: NextPage<Props>=({ matterData, content })=>{
   
   return (
-    <div>
+    <div style={{
+    maxWidth: "900px",
+    margin: "0 auto",
+    padding: "20px"
+  }}>
       <h1 >タイトル：{matterData.title}</h1>
       <p>投稿日：{matterData.date}</p>
       <p>タグ：{matterData.categories}</p>
