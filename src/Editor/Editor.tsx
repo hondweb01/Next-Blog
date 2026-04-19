@@ -10,6 +10,7 @@ import { useRouter } from 'next/router';
 import { useMemo } from "react";
 import "easymde/dist/easymde.min.css";
 import { Options } from "easymde";
+import Link from "next/link";
 
 
 //TODO: イベントは発火する[object DataTransferItemList]は持ってこれてる
@@ -21,7 +22,7 @@ import { Options } from "easymde";
 export const MarkdownEditor = () => {
   const [markdownValue, setMarkdownValue] = useState("");
   const simpleMdeRef = useRef<any>(null);
-      const router=useRouter();
+  const router=useRouter();
 /**
  * EasyMDEプレビューの追加
  * 型を明示しないとstring[]になってしまう
@@ -31,7 +32,7 @@ export const MarkdownEditor = () => {
  * →「この値しか入っていません」と保証できる
  */
 const options: Options = useMemo(() => ({
-  toolbar: ["bold", "italic", "heading", "|", "preview", "side-by-side"],
+  toolbar: ["bold", "italic", "heading","code","guide","|", "preview"],
   spellChecker: false,
 }), []);
 
@@ -53,21 +54,24 @@ const options: Options = useMemo(() => ({
   const handlePaste=async (data:any,e:ClipboardEvent)=>{
 const items = e.clipboardData?.items;
 
+if(!items){
+  return 
+};
 
 //イベントからitemを取得してuploadに送る
 for (const item of items) {
   if (item.type.startsWith("image/")//image/png になる
   ) {
     const file = item.getAsFile(); // ← ここ重要
-    console.log(file)
+
     if(!file) continue;//これがないとappendできない
    const formData=new FormData();
        const resized=await resizeImage(file);
-          console.log("↓画像")
+  
 
    formData.append("file",resized);
 
-   console.log(formData.get("file"));
+
      const res= await fetch("/api/upload", {
       method: "POST",
       body: formData
@@ -75,7 +79,7 @@ for (const item of items) {
     
     //imageを表示する
     const cm=simpleMdeRef.current;
-    console.log(cm)
+
     if(!cm){
       return;
     }
@@ -145,8 +149,7 @@ const resizeImage=(file:File):Promise<Blob>=>{
       body:uploadForm
     });
     const imageData=await res.json();
-    console.log("↓さむね")
-    console.log(imageData)
+
     const url=imageData.url;
   
 
@@ -175,13 +178,11 @@ const createPost=async(formData:FormData)=>{
 
 }
 const id=await createPost(formData);
-console.log("↓idの取得")
-console.log(id)
+
 //作成処理
 const waitForPostReady = async (id: string) => {
   const timeout = 30000;
   const start = Date.now();
-  console.log("idの値"+id)
 
   while (Date.now() - start < timeout) {
     try {
@@ -257,6 +258,7 @@ const waitForPostReady = async (id: string) => {
           }}
         />
         <button type="submit">送信</button>
+        <Link href={"/"}>戻る</Link>
       </form>
 
     </>

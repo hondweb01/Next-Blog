@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import fs from "fs";
 import path from "path";
 import formidable from "formidable";
+import { getImagesPath } from "../../../utils/dataPath";
+
 export const config = {
   api: {
     bodyParser: false,
@@ -46,11 +48,13 @@ export default function Page(req:NextApiRequest, res:NextApiResponse){
       res.status(400).json({ error: "ファイルなし" });
       return;
     }
-    const safeName = uploadedFile.originalFilename?.replace(/\s/g, "_");  
-        const filePath = path.join('public', 'images',`${safeName}`);
+    const safeName = uploadedFile.originalFilename?.replace(/\s/g, "_") || 'image.png';  
         
-        const data=fs.readFileSync(uploadedFile.filepath);//tmpファイルを読み込む
-    fs.writeFileSync(filePath,data);
+        const imagesPath = getImagesPath();
+        const filePath = path.join(imagesPath, `${safeName}`);
+        
+        //tmpファイルの読み込みと
+        fs.copyFileSync(uploadedFile.filepath,filePath);
         res.status(200).json({
   url: `/images/${safeName}`
 });
@@ -61,4 +65,3 @@ res.end();
   }
 
 }
-

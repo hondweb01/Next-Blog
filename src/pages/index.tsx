@@ -25,42 +25,34 @@ type Props = {
  * @returns  記事一覧をpropsとして渡す
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function getStaticProps() {
-
-  const newsFiles = fs.readdirSync(
-    path.join(process.cwd(), "src", "articles")
-
-  );
-      const posts=newsFiles.map((file)=>{
-        //パスの指定、mdファイルを読み取る
-       const filePath=path.join(process.cwd(),"src","articles",file);
-       //ファイルの中身を取得
-       const fileContent=fs.readFileSync(filePath,"utf-8");
-       //メタデータ？
-       const{data}=matter(fileContent);
-  return {
-
-        id:file.replace(/\.md/,""),
-        date: data.date,
-      convertImage: data.convertImage,
-      title:data.title
-
-  };
+export async function getServerSideProps() {
+  const articlesDir = path.join(process.cwd(), "src", "articles");
   
+  if (!fs.existsSync(articlesDir)) {
+    fs.mkdirSync(articlesDir, { recursive: true });
+  }
 
-
-        
-    });
-return {
-  props: {
-    posts,
-  },
-};
-
-
-
-
-
+  const newsFiles = fs.readdirSync(articlesDir);
+  const posts = newsFiles.map((file) => {
+    //パスの指定、mdファイルを読み取る
+    const filePath = path.join(articlesDir, file);
+    //ファイルの中身を取得
+    const fileContent = fs.readFileSync(filePath, "utf-8");
+    //メタデータ？
+    const { data } = matter(fileContent);
+    return {
+      id: file.replace(/\.md/, ""),
+      date: data.date || "Unknown",
+      convertImage: data.convertImage || "",
+      title: data.title || "No Title"
+    };
+  });
+  
+  return {
+    props: {
+      posts,
+    },
+  };
 }
 /**
  * Props型を受け取り画面表示させる
